@@ -52,8 +52,47 @@
 }
 .hero-content{
   position:relative; z-index:2;
-  max-width:680px; padding:140px 32px 110px;
+  width:100%;
 }
+/* ---- Hero layout : texte gauche / grand logo droite ---- */
+.hero-split{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:40px;
+  align-items:center;
+  padding:140px 32px 110px;
+  max-width:1280px;
+  margin:0 auto;
+}
+.hero-left{
+  display:flex; flex-direction:column; gap:20px;
+}
+.hero-right{
+  display:flex; align-items:center; justify-content:flex-end;
+}
+.hero-logo-big{
+  width:100%;
+  max-width:520px;
+  height:auto;
+  filter:drop-shadow(0 8px 32px rgba(0,0,0,.5));
+  animation:float 4s ease-in-out infinite;
+}
+@keyframes float{
+  0%, 100%{ transform:translateY(0); }
+  50%{ transform:translateY(-12px); }
+}
+@media (max-width:900px){
+  .hero-split{
+    grid-template-columns:1fr;
+    padding:100px 24px 60px;
+  }
+  .hero-right{
+    justify-content:center;
+    order:-1;
+  }
+  .hero-logo-big{ max-width:300px; }
+}
+
 .hero-badge-pill{
   display:inline-flex; align-items:center; gap:8px;
   background:rgba(255,255,255,.18); backdrop-filter:blur(6px);
