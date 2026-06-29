@@ -110,12 +110,70 @@
           <div><div class="review-name" data-i18n="review6_name">Elena R.</div><div class="review-meta" data-i18n="review6_meta">Yamaha MT-09 · Décembre 2025</div></div>
         </div>
       </div>
-    </div>
+      <!-- Avis dynamiques ajoutés par les visiteurs -->
+      <div id="userReviewsGrid" class="reviews-grid" style="margin-top:24px;"></div>
 
+    </div>
   </div>
 </section>
 
-<footer class="site-footer">
+<!-- ================= FORMULAIRE D'AVIS ================= -->
+<section class="section section--cream">
+  <div class="container-narrow">
+
+    <div class="section-head-center">
+      <div class="section-head-inner">
+        <p class="eyebrow">VOTRE EXPÉRIENCE</p>
+        <h2 style="font-family:var(--f-display); font-size:clamp(1.6rem,3vw,2.2rem); margin:0 0 10px;">Laissez votre avis</h2>
+        <p style="color:var(--c-ink-soft);">Vous avez loué une moto avec VeloriaRide ? Partagez votre expérience.</p>
+      </div>
+    </div>
+
+    <div class="review-form-card">
+
+      <div class="field">
+        <label>Note <span style="color:var(--c-accent)">*</span></label>
+        <div class="star-picker" id="starPicker">
+          <span data-val="1">★</span>
+          <span data-val="2">★</span>
+          <span data-val="3">★</span>
+          <span data-val="4">★</span>
+          <span data-val="5">★</span>
+        </div>
+        <p class="star-label" id="starLabel">Cliquez pour noter</p>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <div class="field">
+          <label for="rv_name">Prénom et initiale <span style="color:var(--c-accent)">*</span></label>
+          <input type="text" id="rv_name" placeholder="Ex : Julien M." maxlength="30">
+        </div>
+        <div class="field">
+          <label for="rv_model">Moto louée</label>
+          <select id="rv_model">
+            <option value="">— Choisissez —</option>
+            <option value="Yamaha MT-07">Yamaha MT-07</option>
+            <option value="Yamaha MT-09">Yamaha MT-09</option>
+            <option value="Yamaha Tracer 7">Yamaha Tracer 7</option>
+            <option value="Yamaha Tracer 9">Yamaha Tracer 9</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="rv_text">Votre avis <span style="color:var(--c-accent)">*</span></label>
+        <textarea id="rv_text" rows="4" placeholder="Décrivez votre expérience..." maxlength="400"></textarea>
+        <span id="rv_count" style="font-size:.75rem; color:var(--c-ink-faint); text-align:right; display:block;">0 / 400</span>
+      </div>
+
+      <div id="rv_error" class="form-warning"></div>
+      <div id="rv_success" class="form-success">Merci pour votre avis ! Il apparaît maintenant dans la liste. 🎉</div>
+
+      <button class="btn btn-primary btn-block" onclick="submitReview()">Publier mon avis</button>
+      <p style="font-size:.75rem; color:var(--c-ink-faint); text-align:center; margin:0;">Votre avis est enregistré sur cet appareil.</p>
+    </div>
+  </div>
+</section>
   <div class="container">
     <div class="footer-grid">
       <div>
@@ -182,5 +240,130 @@
 
 <script src="./js/i18n.js"></script>
 <script src="./js/main.js"></script>
+<script>
+/* =========================================================
+   SYSTÈME D'AVIS — VeloriaRide
+   Les avis sont stockés dans localStorage du navigateur.
+   Ils apparaissent immédiatement et persistent entre les visites.
+   ========================================================= */
+
+const STORAGE_KEY = 'veloriaride_reviews';
+let selectedStars = 0;
+
+/* ---- Sélecteur d'étoiles ---- */
+const starLabels = ['', 'Décevant', 'Passable', 'Bien', 'Très bien', 'Excellent !'];
+document.querySelectorAll('#starPicker span').forEach(star => {
+  star.addEventListener('mouseenter', () => highlightStars(+star.dataset.val));
+  star.addEventListener('mouseleave', () => highlightStars(selectedStars));
+  star.addEventListener('click', () => {
+    selectedStars = +star.dataset.val;
+    highlightStars(selectedStars);
+    document.getElementById('starLabel').textContent = starLabels[selectedStars];
+  });
+});
+
+function highlightStars(n){
+  document.querySelectorAll('#starPicker span').forEach((s, i) => {
+    s.classList.toggle('active', i < n);
+  });
+}
+
+/* ---- Compteur de caractères ---- */
+document.getElementById('rv_text').addEventListener('input', function(){
+  document.getElementById('rv_count').textContent = this.value.length + ' / 400';
+});
+
+/* ---- Soumettre un avis ---- */
+function submitReview(){
+  const name  = document.getElementById('rv_name').value.trim();
+  const text  = document.getElementById('rv_text').value.trim();
+  const model = document.getElementById('rv_model').value;
+  const error = document.getElementById('rv_error');
+  const success = document.getElementById('rv_success');
+
+  error.classList.remove('show');
+  success.classList.remove('show');
+
+  if (!selectedStars){
+    error.textContent = 'Veuillez sélectionner une note (étoiles).';
+    error.classList.add('show'); return;
+  }
+  if (!name){
+    error.textContent = 'Veuillez entrer votre prénom et initiale.';
+    error.classList.add('show'); return;
+  }
+  if (text.length < 20){
+    error.textContent = 'Votre avis doit faire au moins 20 caractères.';
+    error.classList.add('show'); return;
+  }
+
+  const now   = new Date();
+  const month = now.toLocaleDateString('fr-FR', { month:'long', year:'numeric' });
+  const initials = name.split(' ').map(w => w[0].toUpperCase()).join('').slice(0,2);
+
+  const review = { stars: selectedStars, name, initials, text, model, month,
+                   id: Date.now() };
+
+  const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  stored.unshift(review);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(stored));
+
+  renderUserReviews();
+  success.classList.add('show');
+
+  /* Reset form */
+  selectedStars = 0;
+  highlightStars(0);
+  document.getElementById('starLabel').textContent = 'Cliquez pour noter';
+  document.getElementById('rv_name').value  = '';
+  document.getElementById('rv_text').value  = '';
+  document.getElementById('rv_model').value = '';
+  document.getElementById('rv_count').textContent = '0 / 400';
+}
+
+/* ---- Afficher les avis stockés ---- */
+function renderUserReviews(){
+  const grid = document.getElementById('userReviewsGrid');
+  if (!grid) return;
+  const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  if (!stored.length){ grid.innerHTML = ''; return; }
+
+  grid.innerHTML = stored.map(r => `
+    <div class="review-card" style="border-color:var(--c-accent-soft);">
+      <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+      <p class="review-text">${escapeHtml(r.text)}</p>
+      <div class="review-author">
+        <div class="review-avatar" style="background:var(--c-accent-soft); color:var(--c-accent);">
+          ${r.initials}
+        </div>
+        <div>
+          <div class="review-name">${escapeHtml(r.name)}</div>
+          <div class="review-meta">${r.model ? r.model + ' · ' : ''}${r.month}
+            <button onclick="deleteReview(${r.id})"
+              style="background:none;border:0;color:var(--c-ink-faint);cursor:pointer;font-size:.75rem;margin-left:8px;">
+              ✕ supprimer
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function deleteReview(id){
+  const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(stored.filter(r => r.id !== id)));
+  renderUserReviews();
+}
+
+function escapeHtml(str){
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+
+/* Charger les avis au démarrage */
+document.addEventListener('DOMContentLoaded', renderUserReviews);
+</script>
+
 </body>
 </html>

@@ -52,7 +52,7 @@
 }
 .hero-content{
   position:relative; z-index:2;
-  width:100%;
+  max-width:680px; padding:140px 32px 110px;
 }
 /* ---- Hero layout : texte gauche / grand logo droite ---- */
 .hero-split{
@@ -633,3 +633,37 @@ table.price-table tbody tr:hover{ background:var(--c-bg-cream); }
   font-size:.82rem; color:var(--c-ink-soft); font-style:italic;
 }
 .ride-bike-tip strong{ color:var(--c-ink); font-style:normal; }
+
+/* =========================================================
+   FORMULAIRE D'AVIS
+   ========================================================= */
+.review-form-card{
+  background:#fff;
+  border:1px solid var(--c-border);
+  border-radius:var(--radius-lg);
+  padding:32px;
+  display:flex; flex-direction:column; gap:18px;
+  box-shadow:var(--shadow-card);
+  margin-top:36px;
+}
+.star-picker{
+  display:flex; gap:8px; font-size:2.2rem;
+  cursor:pointer;
+}
+.star-picker span{
+  color:#ddd;
+  transition:color .12s, transform .12s;
+  line-height:1;
+}
+.star-picker span:hover,
+.star-picker span.active{ color:#f4a61d; }
+.star-picker span:hover{ transform:scale(1.15); }
+.star-label{
+  font-size:.82rem; color:var(--c-ink-faint);
+  margin:4px 0 0;
+}
+@media (max-width:560px){
+  .review-form-card > div[style*="grid"]{
+    grid-template-columns:1fr !important;
+  }
+}
